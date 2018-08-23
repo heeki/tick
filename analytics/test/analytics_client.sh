@@ -1,10 +1,12 @@
 #!/bin/bash
 
 source analytics/test/analytics_env.sh
-BASEPATH=$ANALYTICS_BASEPATH
-PYTHONPATH=$ANALYTICS_PYTHONPATH
-echo "BASEPATH=$BASEPATH"
-echo "PYTHONPATH=$PYTHONPATH"
+echo "BASEPATH=$ANALYTICS_BASEPATH"
+echo "PYTHONPATH=$ANALYTICS_PYTHONPATH"
 
-cd $BASEPATH
-python analytics/src/client.py
+cd $ANALYTICS_BASEPATH
+#python analytics/src/client.py $ANALYTICS_REF $ANALYTICS_DATA1
+#python analytics/src/client.py $ANALYTICS_REF $ANALYTICS_DATA2
+#python analytics/src/client.py $ANALYTICS_REF $ANALYTICS_DATA3
+python analytics/src/client.py $ANALYTICS_REF $ANALYTICS_DATA4
+#python analytics/src/client.py $ANALYTICS_REF $ANALYTICS_DATA5

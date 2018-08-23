@@ -1,25 +1,26 @@
+import json
 
 
 class Trade:
-    def __init__(self):
-        self.exchanges = {
-            'A': 'AMEX (NYSE MKT)',
-            'B': 'NASDAQ OMX BX (Boston)',
-            'C': 'National Stock Exchange (Cincinnati)',
-            'D/1': 'NASD ADF (FINRA)',
-            'E': 'Market Independent (SIP - Generated)',
-            'I': 'ISE (International Securities Exchange)',
-            'J': 'DirectEdge A',
-            'K': 'DirectEdge X',
-            'M': 'Chicago',
-            'N': 'NYSE',
-            'O': 'Instinct',
-            'P': 'ARCA (formerly Pacific)',
-            'S': 'Consolidated Tape System',
-            'T/Q': 'NASDAQ',
-            'V': 'IEX',
-            'W': 'CBOE',
-            'X': 'NASDAQ OMX PSX (Philadelphia)',
-            'Y': 'BATS Y-Exchange, Inc',
-            'Z': 'BATS'
+    def __init__(self, symbol, payload):
+        self.symbol = symbol
+        self.payload = payload
+        self.date = payload[0]
+        self.time = payload[1]
+        self.price = payload[2]
+        self.volume = payload[3]
+        self.exchange_code = payload[4]
+        self.sales_condition = payload[5]
+
+    def __repr__(self):
+        return self.payload
+
+    def __str__(self):
+        values = {
+            'symbol': self.symbol,
+            'date': self.date,
+            'time': self.time,
+            'price': self.price,
+            'volume': self.volume
         }
+        return json.dumps(values)
