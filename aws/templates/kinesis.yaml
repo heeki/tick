@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Kinesis data stream for tick ingest
+
+Parameters:
+  ParamName:
+    Type: String
+
+Resources:
+  TickStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: !Sub '${ParamName}-ingest'
+      RetentionPeriodHours: 24
+      ShardCount: 3
+
+Outputs:
+  OutPhysicalId:
+    Value: !Ref TickStream
+  OutArn:
+    Value: !GetAtt TickStream.Arn
