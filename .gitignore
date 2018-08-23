@@ -1,0 +1,7 @@
+.DS_Store
+.idea/*
+*.asc
+*.csv
+*.pdf
+*.pyc
+secret.md
