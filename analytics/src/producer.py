@@ -7,7 +7,7 @@ from tick.trade import Trade
 
 
 def main():
-    log = Util.get_logger("client")
+    log = Util.get_logger("producer")
 
     ref_file = sys.argv[1]
     log.info("ref_file={}".format(ref_file))
@@ -45,7 +45,7 @@ def main():
             }
             batch_records.append(record)
             if batch_iter % batch_size == 0:
-                response = kclient.batch_put(batch_records)
+                response = kclient.put_batch(batch_records)
                 log.info(response)
                 batch_records = []
 
