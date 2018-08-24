@@ -2,9 +2,10 @@ import json
 
 
 class Trade:
-    def __init__(self, symbol, payload):
+    def __init__(self, symbol, payload, ingest_epoch):
         self.symbol = symbol
         self.payload = payload
+        self.ingest_epoch = ingest_epoch
         self.date = payload[0]
         self.time = payload[1]
         self.price = payload[2]
@@ -21,6 +22,7 @@ class Trade:
             'date': self.date,
             'time': self.time,
             'price': self.price,
-            'volume': self.volume
+            'volume': self.volume,
+            'ingest_epoch': self.ingest_epoch
         }
         return json.dumps(values)

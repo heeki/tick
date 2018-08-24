@@ -1,4 +1,6 @@
 import logging
+import time
+from datetime import datetime
 
 
 class Util:
@@ -15,3 +17,11 @@ class Util:
         if len(log.handlers) == 0:
             log.addHandler(handler_console)
         return log
+
+    @staticmethod
+    def get_timestamp():
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    @staticmethod
+    def get_epoch():
+        return time.time()

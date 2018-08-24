@@ -1,5 +1,6 @@
 import csv
 import sys
+from utils.kinesis import Kinesis
 from utils.util import Util
 from tick.symbol import Symbol
 from tick.trade import Trade
@@ -26,11 +27,27 @@ def main():
     log.info("symbol={}, company_id={}, company_name='{}'"
              .format(mapper[company_id].symbol, mapper[company_id].company_id, mapper[company_id].company_name))
 
+    batch_iter = 0
+    batch_size = 50
+    batch_records = []
+    kinesis_stream = "tick-ingest"
+    kclient = Kinesis(kinesis_stream)
     with open(data_file, 'r') as csv_file:
         trade_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
         for trade_data in trade_reader:
-            trade = Trade(mapper[company_id].symbol, trade_data)
+            trade = Trade(mapper[company_id].symbol, trade_data, Util.get_epoch())
             log.info(str(trade))
+
+            batch_iter += 1
+            record = {
+                'Data': str(trade),
+                'PartitionKey': trade.symbol
+            }
+            batch_records.append(record)
+            if batch_iter % batch_size == 0:
+                response = kclient.batch_put(batch_records)
+                log.info(response)
+                batch_records = []
 
 
 if __name__ == "__main__":
