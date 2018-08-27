@@ -1,3 +1,4 @@
+import sys
 from utils.kinesis import Kinesis
 from utils.util import Util
 from tick.symbol import Symbol
@@ -13,7 +14,10 @@ def main():
     for shard in shards:
         log.info("discovered {}".format(shard))
 
-    kclient.get_continuous("shardId-000000000002", log)
+    shard_id = sys.argv[1]
+    batch_size = 200
+    log.info("processing {}".format(shard_id))
+    kclient.get_continuous(shard_id, batch_size)
 
 
 if __name__ == "__main__":

@@ -23,8 +23,8 @@ class Util:
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
-    def convert_timestamp(timestamp):
-        return timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    def convert_timestamp(epoch):
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(epoch))
 
     @staticmethod
     def get_epoch():

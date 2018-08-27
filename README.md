@@ -35,3 +35,20 @@ To build the Kinesis stream, first the aws/test/deploy_env.sh file needs to be u
 ```
 aws/test/deploy_kinesis.sh
 ```
+
+## Kinesis
+To properly run the environment, you'll want to run a consumer in separate terminal windows. The purposes here is
+to force a consume into separate processes to emulate multiple consumers reading from the stream. Once each of the 
+consumers is running and listening on its assigned shard, the producer can be run against all of the data. In this
+case, the producer script is serially running through each data file, which is not ideal. For now, I'm executing
+the producer shell script against a single input file, which is ultimately going to shard #2. Ultimately, the
+producer shell script should probably run against each data file, backgrounding and allowing the system to run them
+all in parallel. I'm a little concerned about latency of process context switching so I'm sticking with just
+one for now.
+```
+python analytics/src/consumer.py shardId-000000000000
+python analytics/src/consumer.py shardId-000000000001
+python analytics/src/consumer.py shardId-000000000002
+
+analytics/test/analytics_producer.sh
+```
