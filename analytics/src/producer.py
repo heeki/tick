@@ -1,4 +1,5 @@
 import csv
+import json
 import sys
 from utils.kinesis import Kinesis
 from utils.util import Util
@@ -28,6 +29,10 @@ def main():
              .format(mapper[company_id].symbol, mapper[company_id].company_id, mapper[company_id].company_name))
 
     total_count = 0
+    status = {
+        "FailedRecordCount": 0,
+        "SuccessfulRecordCount": 0,
+    }
     batch_iter = 0
     batch_size = 200
     batch_records = []
@@ -52,10 +57,16 @@ def main():
                 response = kclient.put_batch(batch_records)
                 log.info(response)
                 batch_records = []
+                status["FailedRecordCount"] += json.loads(response)["FailedRecordCount"]
+                status["SuccessfulRecordCount"] += json.loads(response)["SuccessfulRecordCount"]
+        # processing the last set of data beyond batch_size
         response = kclient.put_batch(batch_records)
         log.info(response)
+        status["FailedRecordCount"] += json.loads(response)["FailedRecordCount"]
+        status["SuccessfulRecordCount"] += json.loads(response)["SuccessfulRecordCount"]
 
-    log.info("processed {} records".format(total_count))
+    log.info("processed_records={}".format(total_count))
+    log.info("final_status={}".format(json.dumps(status)))
 
 
 if __name__ == "__main__":

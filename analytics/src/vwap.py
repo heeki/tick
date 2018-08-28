@@ -13,9 +13,9 @@ def main():
         log.info("discovered {}".format(shard))
 
     shard_id = sys.argv[2]
-    batch_size = 200
+    batch_size = 1
     log.info("processing {}".format(shard_id))
-    kclient.get_continuous(shard_id, batch_size)
+    kclient.get_vwap(shard_id, batch_size)
 
 
 if __name__ == "__main__":

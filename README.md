@@ -36,7 +36,7 @@ To build the Kinesis stream, first the aws/test/deploy_env.sh file needs to be u
 aws/test/deploy_kinesis.sh
 ```
 
-## Kinesis
+## Kinesis Data Streams
 To properly run the environment, you'll want to run a consumer in separate terminal windows. The purposes here is
 to force a consume into separate processes to emulate multiple consumers reading from the stream. Once each of the 
 consumers is running and listening on its assigned shard, the producer can be run against all of the data. In this
@@ -51,4 +51,16 @@ python analytics/src/consumer.py shardId-000000000001
 python analytics/src/consumer.py shardId-000000000002
 
 analytics/test/analytics_producer.sh
+```
+
+## Kinesis Analytics
+To calculate VWAP on the live stream, we need to first create a destination stream ("VWAP_DESTINATION"). Then
+we need to create a pump ("VWAP_PUMP"), which will read the source stream ("SOURCE_SQL_STREAM_001"), calculate
+the VWAP, and place the results in the destination stream.
+```
+CREATE OR REPLACE STREAM "VWAP_DESTINATION" ("symbol" VARCHAR(4), "vwap" REAL, "earliest_epoch" DOUBLE);
+CREATE OR REPLACE PUMP "VWAP_PUMP" AS INSERT INTO "VWAP_DESTINATION"
+SELECT STREAM "symbol", SUM("volume" * "price") / SUM("volume") as vwap, MIN("ingest_epoch") as earliest_epoch
+FROM "SOURCE_SQL_STREAM_001"
+GROUP BY "symbol", STEP("SOURCE_SQL_STREAM_001".ROWTIME BY INTERVAL '1' SECOND);
 ```
