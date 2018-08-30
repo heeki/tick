@@ -5,4 +5,4 @@ echo "BASEPATH=$ANALYTICS_BASEPATH"
 echo "PYTHONPATH=$ANALYTICS_PYTHONPATH"
 
 cd $ANALYTICS_BASEPATH
-python analytics/src/consumer.py $KINESIS_TICK shardId-000000000002
+python analytics/src/consumer_tick.py $KINESIS_TICK shardId-000000000002

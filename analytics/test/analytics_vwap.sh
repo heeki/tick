@@ -5,4 +5,4 @@ echo "BASEPATH=$ANALYTICS_BASEPATH"
 echo "PYTHONPATH=$ANALYTICS_PYTHONPATH"
 
 cd $ANALYTICS_BASEPATH
-python analytics/src/vwap.py $KINESIS_VWAP shardId-000000000000
+python analytics/src/consumer_vwap.py $KINESIS_VWAP shardId-000000000000
