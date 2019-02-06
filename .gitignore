@@ -1,8 +1,10 @@
 .DS_Store
 .idea/*
+batch/tmp/*
+kinesis/tmp/*
+tmp/*
+*/notes.md
 *.asc
 *.csv
 *.pdf
 *.pyc
-notes.md
-secret.md

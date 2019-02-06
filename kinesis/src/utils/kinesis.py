@@ -48,7 +48,7 @@ class Kinesis:
                     data = json.loads(record["Data"])
                     ingest_epoch = data["ingest_epoch"]
                     current_epoch = Util.get_epoch()
-                    latency = current_epoch - ingest_epoch
+                    latency = (current_epoch - ingest_epoch) * 1000
                     latencies.append(latency)
                     values = {
                         # "ingest_epoch": ingest_epoch,
@@ -58,7 +58,7 @@ class Kinesis:
                         "time": data["time"],
                         "volume": data["volume"],
                         "price": data["price"],
-                        "latency": latency
+                        "latency_ms": latency
                     }
                     self.log.info("i={}, j={}, values={}".format(i, j, json.dumps(values)))
                     i = 1 if i == batch_size else i + 1
@@ -96,7 +96,7 @@ class Kinesis:
                     data = json.loads(record["Data"])
                     earliest_epoch = data["earliest_epoch"]
                     current_epoch = Util.get_epoch()
-                    latency = current_epoch - earliest_epoch
+                    latency = (current_epoch - earliest_epoch) * 1000
                     symbol = data["symbol"]
                     if symbol not in latencies.keys():
                         latencies[symbol] = []
@@ -104,7 +104,7 @@ class Kinesis:
                     values = {
                         "symbol": symbol,
                         "vwap": data["vwap"],
-                        "latency": latency
+                        "latency_ms": latency
                     }
                     self.log.info("i={}, j={}, values={}".format(i, j, json.dumps(values)))
                     i = 1 if i == batch_size else i + 1
@@ -118,5 +118,5 @@ class Kinesis:
                 for symbol in latencies:
                     total_measurements = len(latencies[symbol])
                     average_latency = np.convolve(latencies[symbol], np.ones(total_measurements,)/total_measurements, mode='valid')
-                    self.log.info("symbol={}, processed_records={}, average_latency={}".format(symbol, total_measurements, average_latency))
+                    self.log.info("symbol={}, processed_records={}, average_latency_ms={}".format(symbol, total_measurements, average_latency))
                 sys.exit(0)

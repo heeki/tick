@@ -43,8 +43,9 @@ class KinesisEnhanced:
         return response["Consumers"]
 
     def subscribe(self, shard_id):
-        response = self.client.subscribe_to_shard(
-            ConsumerARN=self.consumer_arn,
-            ShardId=shard_id
-        )
-        return response
+        self.log.info("need to make a call to the java implementation")
+        # response = self.client.subscribe_to_shard(
+        #     ConsumerARN=self.consumer_arn,
+        #     ShardId=shard_id
+        # )
+        # return response

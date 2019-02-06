@@ -1,9 +1,9 @@
 #!/bin/bash
 
-source aws/test/deploy_env.sh
+source deploy_env.sh
 echo "PROFILE=$PROFILE"
 
-TEMPLATE=aws/templates/kinesis.yaml
+TEMPLATE=templates/kinesis.yaml
 STACK=tick-kinesis
 PARAMS=ParameterKey=ParamName,ParameterValue=tick
 VERB=update
