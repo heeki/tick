@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Kinesis data stream for tick ingest
+Description: KDS for ingestion of tick data
 
 Parameters:
   ParamName:
@@ -12,30 +12,30 @@ Resources:
       Name: !Sub '${ParamName}-ingest'
       RetentionPeriodHours: 24
       ShardCount: 3
-  VwapStream:
-    Type: AWS::Kinesis::Stream
-    Properties:
-      Name: !Sub '${ParamName}-vwap'
-      RetentionPeriodHours: 24
-      ShardCount: 1
-#  TickAnalytics:
-#    Type: AWS::KinesisAnalytics::Application
-#    Properties:
-#      ApplicationName: !Sub '${ParamName}-analytics'
-#      ApplicationDescription: 'Application for calculating VWAP'
-#      Inputs:
-#        - KinesisStreamsInput:
-#            ResourceARN !GetAtt TickStream.Arn
-#            RoleARN:
+  # VwapStream:
+  #   Type: AWS::Kinesis::Stream
+  #   Properties:
+  #     Name: !Sub '${ParamName}-vwap'
+  #     RetentionPeriodHours: 24
+  #     ShardCount: 1
+  # TickAnalytics:
+  #   Type: AWS::KinesisAnalytics::Application
+  #   Properties:
+  #     ApplicationName: !Sub '${ParamName}-analytics'
+  #     ApplicationDescription: 'Application for calculating VWAP'
+  #     Inputs:
+  #       - KinesisStreamsInput:
+  #           ResourceARN !GetAtt TickStream.Arn
+  #           RoleARN:
 
 Outputs:
   OutTickPhysicalId:
     Value: !Ref TickStream
   OutTickArn:
     Value: !GetAtt TickStream.Arn
-  OutVwapPhysicalId:
-    Value: !Ref VwapStream
-  OutVwapArn:
-    Value: !GetAtt VwapStream.Arn
-#  OutAnalytics:
-#    Value: !Ref TickAnalytics
+  # OutVwapPhysicalId:
+  #   Value: !Ref VwapStream
+  # OutVwapArn:
+  #   Value: !GetAtt VwapStream.Arn
+  # OutAnalytics:
+  #   Value: !Ref TickAnalytics
