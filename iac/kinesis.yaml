@@ -6,12 +6,12 @@ Parameters:
     Type: String
 
 Resources:
-  TickStream:
+  TickIngestStream:
     Type: AWS::Kinesis::Stream
     Properties:
       Name: !Sub '${ParamName}-ingest'
       RetentionPeriodHours: 24
-      ShardCount: 3
+      ShardCount: 1
   # VwapStream:
   #   Type: AWS::Kinesis::Stream
   #   Properties:
@@ -30,9 +30,9 @@ Resources:
 
 Outputs:
   OutTickPhysicalId:
-    Value: !Ref TickStream
+    Value: !Ref TickIngestStream
   OutTickArn:
-    Value: !GetAtt TickStream.Arn
+    Value: !GetAtt TickIngestStream.Arn
   # OutVwapPhysicalId:
   #   Value: !Ref VwapStream
   # OutVwapArn:

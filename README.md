@@ -38,14 +38,13 @@ iac/describe.sh -p [profile] -s [stack_name]
 ```
 
 ## Kinesis Data Streams
-To properly run the environment, you'll want to run a consumer in separate terminal windows. The purposes here is
-to force a consume into separate processes to emulate multiple consumers reading from the stream. Once each of the 
-consumers is running and listening on its assigned shard, the producer can be run against all of the data. In this
-case, the producer script is serially running through each data file, which is not ideal. For now, I'm executing
-the producer shell script against a single input file, which is ultimately going to shard #2. Ultimately, the
-producer shell script should probably run against each data file, backgrounding and allowing the system to run them
-all in parallel. I'm a little concerned about latency of process context switching so I'm sticking with just
-one for now.
+To produce data into the stream:
+```bash
+source test/tick_env.sh
+python src/producer.py --rfile $ANALYTICS_REF --dfile $ANALYTICS_DATA1
+```
+
+To consume data from the stream:
 ```bash
 python tick/src/consumer.py shardId-000000000000
 python tick/src/consumer.py shardId-000000000001
