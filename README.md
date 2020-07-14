@@ -8,28 +8,15 @@ Sample data was retrieved from https://www.tickdata.com/product/nbbo/. That data
 
 For example, my directory structure looks as follows:
 ```
-tick/data/SampleEquityData_US/CompanyInfo
-tick/data/SampleEquityData_US/NBBO
-tick/data/SampleEquityData_US/OMED
-tick/data/SampleEquityData_US/Quote Bars
-tick/data/SampleEquityData_US/Quotes
-tick/data/SampleEquityData_US/Trades
+data/SampleEquityData_US/CompanyInfo
+data/SampleEquityData_US/NBBO
+data/SampleEquityData_US/OMED
+data/SampleEquityData_US/Quote Bars
+data/SampleEquityData_US/Quotes
+data/SampleEquityData_US/Trades
 ```
 
-With the trade data in place, the tick/test/analytics_env.sh needs to be updated with pointers to the data files as follows:
- ```bash
-ANALYTICS_BASEPATH=/tick
-ANALYTICS_PYTHONPATH=$ANALYTICS_BASEPATH/src
-
-ANALYTICS_REF=$ANALYTICS_BASEPATH/tick/data/SampleEquityData_US/CompanyInfo/CompanyInfo.asc
-ANALYTICS_DATA1=$ANALYTICS_BASEPATH/tick/data/SampleEquityData_US/Trades/14081.csv
-ANALYTICS_DATA2=$ANALYTICS_BASEPATH/tick/data/SampleEquityData_US/Trades/23444.csv
-ANALYTICS_DATA3=$ANALYTICS_BASEPATH/tick/data/SampleEquityData_US/Trades/23870.csv
-ANALYTICS_DATA4=$ANALYTICS_BASEPATH/tick/data/SampleEquityData_US/Trades/27667.csv
-ANALYTICS_DATA5=$ANALYTICS_BASEPATH/tick/data/SampleEquityData_US/Trades/28082.csv
-```
-
-## Infrastructure deployment
+## Infrastructure Deployment
 To build the Kinesis stream, execute the deploy script with the proper parameters.
 
 ```bash
@@ -37,20 +24,24 @@ iac/deploy.sh -p [profile] -t [template_file] -s [stack_name] -v [create|update]
 iac/describe.sh -p [profile] -s [stack_name]
 ```
 
-## Kinesis Data Streams
+## Kinesis Producer
 To produce data into the stream:
 ```bash
-source test/tick_env.sh
-python src/producer.py --rfile $ANALYTICS_REF --dfile $ANALYTICS_DATA1
+source src/execute_env.sh
+python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA0
+python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA1
+python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA2
+python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA3
+python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA4
 ```
 
+## Kinesis Consumer
 To consume data from the stream:
 ```bash
-python tick/src/consumer.py shardId-000000000000
-python tick/src/consumer.py shardId-000000000001
-python tick/src/consumer.py shardId-000000000002
-
-tick/test/analytics_producer.sh
+source src/execute_env.sh
+python src/consumer.py $KINESIS_SHARD0
+python src/consumer.py $KINESIS_SHARD1
+python src/consumer.py $KINESIS_SHARD2
 ```
 
 ## Kinesis Analytics
@@ -60,6 +51,7 @@ the VWAP, and place the results in the destination stream.
 
 ```sql
 CREATE OR REPLACE STREAM "VWAP_DESTINATION" ("symbol" VARCHAR(4), "vwap" REAL, "earliest_epoch" DOUBLE);
+
 CREATE OR REPLACE PUMP "VWAP_PUMP" AS INSERT INTO "VWAP_DESTINATION"
 SELECT STREAM "symbol", SUM("volume" * "price") / SUM("volume") as vwap, MIN("ingest_epoch") as earliest_epoch
 FROM "SOURCE_SQL_STREAM_001"
