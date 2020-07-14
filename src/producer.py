@@ -8,45 +8,48 @@ from utils.kinesis_std import Kinesis
 from utils.util import Util
 
 
-def main():
-    log = Util.get_logger("producer")
+log = Util.get_logger("producer")
+batch_size = -1
+company_id = -1
+mapper = {}
+
+
+def init():
+    global batch_size, company_id, mapper
 
     ap = argparse.ArgumentParser()
-    ap.add_argument('--rfile', required=True, help='MM/DD/YYYY')
-    ap.add_argument('--dfile', required=True, help='dddd.dd')
+    ap.add_argument('--rfile', required=True, help='data/SampleEquityData_US/CompanyInfo/CompanyInfo.asc')
+    ap.add_argument('--dfile', required=True, help='data/SampleEquityData_US/Trades/14081.csv')
+    ap.add_argument('--batch_size', required=False, help='500')
     args = ap.parse_args()
 
-    ref_file = args.rfile
-    log.info("ref_file={}".format(ref_file))
-
-    mapper = {}
-    with open(ref_file, 'r') as csv_file:
+    batch_size = int(args.batch_size) if args.batch_size is not None else 100
+    company_id = args.dfile.split('/')[-1].split('.')[0]
+    with open(args.rfile, 'r') as csv_file:
         ref_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
         next(ref_reader, None)
         for ref_data in ref_reader:
             ref = Symbol(ref_data)
-            log.info(str(ref))
             mapper[ref.company_id] = ref
 
-    data_file = args.dfile
-    log.info("data_file={}".format(data_file))
-    company_id = data_file.split('/')[-1].split('.')[0]
-    log.info(mapper)
+    return args
 
-    total_count = 0
+
+def produce(dfile):
     status = {
         "FailedRecordCount": 0,
         "SuccessfulRecordCount": 0,
     }
+    total_count = 0
     batch_iter = 0
-    batch_size = 500
     batch_bytes = 0
     batch_records = []
     kinesis_stream = "tick-ingest"
     kclient = Kinesis(kinesis_stream)
     try:
-        with open(data_file, 'r') as csv_file:
+        with open(dfile, 'r') as csv_file:
             trade_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
+            # process in batches
             for trade_data in trade_reader:
                 total_count += 1
                 batch_iter += 1
@@ -67,7 +70,7 @@ def main():
                     status["FailedRecordCount"] += json.loads(response)["FailedRecordCount"]
                     status["SuccessfulRecordCount"] += json.loads(response)["SuccessfulRecordCount"]
                     batch_records = []
-            # processing the last set of data beyond batch_size
+            # process the last set of data beyond batch_size
             response = kclient.put_batch(batch_records)
             log.info(response)
             status["FailedRecordCount"] += json.loads(response)["FailedRecordCount"]
@@ -77,6 +80,11 @@ def main():
     finally:
         log.info("processed_records={}, total_bytes={}, avg_bytes={}".format(total_count, batch_bytes, batch_bytes/total_count))
         log.info("final_status={}".format(json.dumps(status)))
+
+
+def main():
+    args = init()
+    produce(args.dfile)
 
 
 if __name__ == "__main__":
