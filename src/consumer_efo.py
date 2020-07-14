@@ -1,13 +1,14 @@
 import json
 import sys
-from utils.kinesis import Kinesis
-from utils.kinesis_enhanced import KinesisEnhanced
+from utils.kinesis_std import Kinesis
+from utils.kinesis_efo import KinesisEnhanced
 from utils.util import Util
 
 
 def main():
     log = Util.get_logger("consumer-enhanced")
 
+    # TODO: convert to argparse
     kinesis_stream = sys.argv[1]
     kclient = Kinesis(kinesis_stream)
     shards = kclient.get_shards()

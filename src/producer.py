@@ -1,7 +1,7 @@
 import csv
 import json
 import sys
-from utils.kinesis import Kinesis
+from utils.kinesis_std import Kinesis
 from utils.util import Util
 from tick.symbol import Symbol
 from tick.trade import Trade

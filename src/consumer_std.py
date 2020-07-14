@@ -1,11 +1,12 @@
 import sys
-from utils.kinesis import Kinesis
+from utils.kinesis_std import Kinesis
 from utils.util import Util
 
 
 def main():
     log = Util.get_logger("consumer")
 
+    # TODO: convert to argparse
     kinesis_stream = sys.argv[1]
     kclient = Kinesis(kinesis_stream)
     shards = kclient.get_shards()
@@ -13,9 +14,9 @@ def main():
         log.info("discovered {}".format(shard))
 
     shard_id = sys.argv[2]
-    batch_size = 200
+    batch_size = 1
     log.info("processing {}".format(shard_id))
-    kclient.get_continuous(shard_id, batch_size)
+    kclient.get_vwap(shard_id, batch_size)
 
 
 if __name__ == "__main__":

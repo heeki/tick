@@ -1,9 +1,17 @@
+# miscellaneous
 .DS_Store
+.vscode/*
 .idea/*
-batch/tmp/*
-kinesis/tmp/*
+.env
+
+# data files
+data/*
+
+# temp files
 tmp/*
-*/notes.md
+
+# files
+_notes.md
 *.asc
 *.csv
 *.pdf
