@@ -22,8 +22,7 @@ class Kinesis:
             "FailedRecordCount": response["FailedRecordCount"],
             "SuccessfulRecordCount": len(response["Records"])
         }
-        return json.dumps(values)
-        # return json.dumps(response)
+        return values
 
     def get_continuous(self, shard_id, batch_size):
         # AT_SEQUENCE_NUMBER | AFTER_SEQUENCE_NUMBER | AT_TIMESTAMP | TRIM_HORIZON | LATEST

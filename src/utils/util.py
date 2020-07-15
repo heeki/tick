@@ -19,6 +19,14 @@ class Util:
         return log
 
     @staticmethod
+    def get_date():
+        return datetime.now().strftime("%m/%d/%Y")
+
+    @staticmethod
+    def get_time():
+        return datetime.now().strftime("%H:%M:%S.%f")
+
+    @staticmethod
     def get_timestamp():
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

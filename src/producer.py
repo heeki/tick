@@ -55,6 +55,7 @@ def produce(dfile):
                 batch_iter += 1
 
                 trade = Trade(mapper[company_id].symbol, trade_data, Util.get_epoch())
+                trade.update_datetime()
                 record = {
                     'Data': str(trade),
                     'PartitionKey': trade.symbol
@@ -66,15 +67,15 @@ def produce(dfile):
 
                 if batch_iter % batch_size == 0:
                     response = kclient.put_batch(batch_records)
-                    log.info(response)
-                    status["FailedRecordCount"] += json.loads(response)["FailedRecordCount"]
-                    status["SuccessfulRecordCount"] += json.loads(response)["SuccessfulRecordCount"]
+                    log.info(json.dumps(response))
+                    status["FailedRecordCount"] += response["FailedRecordCount"]
+                    status["SuccessfulRecordCount"] += response["SuccessfulRecordCount"]
                     batch_records = []
             # process the last set of data beyond batch_size
             response = kclient.put_batch(batch_records)
-            log.info(response)
-            status["FailedRecordCount"] += json.loads(response)["FailedRecordCount"]
-            status["SuccessfulRecordCount"] += json.loads(response)["SuccessfulRecordCount"]
+            log.info(json.dumps(response))
+            status["FailedRecordCount"] += response["FailedRecordCount"]
+            status["SuccessfulRecordCount"] += response["SuccessfulRecordCount"]
     except KeyboardInterrupt:
         log.error("keyboard interrupted")
     finally:

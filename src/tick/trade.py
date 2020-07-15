@@ -1,4 +1,5 @@
 import json
+from utils.util import Util
 
 
 class Trade:
@@ -26,3 +27,7 @@ class Trade:
             'ingest_epoch': self.ingest_epoch
         }
         return json.dumps(values)
+
+    def update_datetime(self):
+        self.date = Util.get_date()
+        self.time = Util.get_time()
