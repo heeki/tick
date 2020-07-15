@@ -2,7 +2,7 @@ import csv
 import json
 from tick.symbol import Symbol
 from tick.trade import Trade
-from utils.kinesis_std import Kinesis
+from utils.kinesis import Kinesis
 from utils.util import Util
 
 
@@ -12,6 +12,7 @@ class Producer:
         self.dfile = dfile
         self.stream = stream
         self.batch_size = batch_size
+        self.client = Kinesis(self.stream)
 
         mapper = {}
         with open(rfile, 'r') as csv_file:
@@ -34,7 +35,6 @@ class Producer:
         batch_count = 0
         batch_bytes = 0
         batch_records = []
-        kclient = Kinesis(self.stream)
         try:
             with open(self.dfile, 'r') as csv_file:
                 trade_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
@@ -55,13 +55,13 @@ class Producer:
                     self.log.info("i={}, record_size={}, trade={}".format(total_count, record_size, str(trade)))
 
                     if batch_count % self.batch_size == 0:
-                        response = kclient.put_batch(batch_records)
+                        response = self.client.put_batch(batch_records)
                         self.log.info(json.dumps(response))
                         status["FailedRecordCount"] += response["FailedRecordCount"]
                         status["SuccessfulRecordCount"] += response["SuccessfulRecordCount"]
                         batch_records = []
                 # process the last set of data beyond batch_size
-                response = kclient.put_batch(batch_records)
+                response = self.client.put_batch(batch_records)
                 self.log.info(json.dumps(response))
                 status["FailedRecordCount"] += response["FailedRecordCount"]
                 status["SuccessfulRecordCount"] += response["SuccessfulRecordCount"]
