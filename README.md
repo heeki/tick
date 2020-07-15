@@ -28,20 +28,20 @@ iac/describe.sh -p [profile] -s [stack_name]
 To produce data into the stream:
 ```bash
 source src/execute_env.sh
-python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA0
-python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA1
-python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA2
-python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA3
-python src/producer.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA4
+python src/produce.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA0 --stream $KINESIS_TICK --batch_size 100
+python src/produce.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA1 --stream $KINESIS_TICK --batch_size 100
+python src/produce.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA2 --stream $KINESIS_TICK --batch_size 100
+python src/produce.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA3 --stream $KINESIS_TICK --batch_size 100
+python src/produce.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA4 --stream $KINESIS_TICK --batch_size 100
 ```
 
 ## Kinesis Consumer
 To consume data from the stream:
 ```bash
 source src/execute_env.sh
-python src/consumer.py $KINESIS_SHARD0
-python src/consumer.py $KINESIS_SHARD1
-python src/consumer.py $KINESIS_SHARD2
+python src/consume.py $KINESIS_SHARD0
+python src/consume.py $KINESIS_SHARD1
+python src/consume.py $KINESIS_SHARD2
 ```
 
 ## Kinesis Analytics

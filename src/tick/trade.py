@@ -3,10 +3,10 @@ from utils.util import Util
 
 
 class Trade:
-    def __init__(self, symbol, payload, ingest_epoch):
+    def __init__(self, symbol, payload):
         self.symbol = symbol
         self.payload = payload
-        self.ingest_epoch = ingest_epoch
+        self.ingest_epoch = Util.get_epoch()
         self.date = payload[0]
         self.time = payload[1]
         self.price = payload[2]
