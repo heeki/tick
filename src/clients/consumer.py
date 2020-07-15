@@ -9,13 +9,16 @@ from utils.util import Util
 
 
 class Consumer:
-    def __init__(self, stream, shard, batch_size):
+    def __init__(self, stream, shard, consumer=None):
         self.stream = stream
         self.shard = shard
-        self.batch_size = batch_size
-        self.client = Kinesis(stream)
+        self.batch_size = 100
+        self.client = Kinesis(stream) if consumer is None else Kinesis(stream, consumer)
         self.log = Util.get_logger("consumer:{}".format(self.stream))
     
+    def set_batch_size(self, batch_size):
+        self.batch_size = batch_size
+
     def get_shards(self):
         return self.client.get_shards()
     
@@ -70,3 +73,10 @@ class Consumer:
                     average_latency = numpy.convolve(latencies[symbol], numpy.ones(total_measurements,)/total_measurements, mode='valid')
                     self.log.info("symbol={}, processed_records={}, average_latency_ms={}".format(symbol, total_measurements, average_latency))
                 sys.exit(1)
+
+    def subscribe(self):
+        with self.client:
+            consumers = self.client.get_stream_consumers()
+            for consumer in consumers:
+                self.log.info("type={}, values={}".format(type(consumer), consumer))
+                self.client.subscribe(self.shard)
