@@ -39,11 +39,12 @@ python src/produce.py --rfile $ANALYTICS_RDATA --dfile $ANALYTICS_DATA4 --stream
 To consume data from the stream:
 ```bash
 source src/execute_env.sh
-python src/consume.py --stream $KINESIS_TICK --shard $KINESIS_SHARD0 --batch_size 100
-python src/consume.py --stream $KINESIS_TICK --shard $KINESIS_SHARD1 --batch_size 100
-python src/consume.py --stream $KINESIS_TICK --shard $KINESIS_SHARD2 --batch_size 100
-
-python src/consume_efo.py --stream $KINESIS_TICK --consumer tick-consumer0 --shard $KINESIS_SHARD0
+python src/consume.py --type STD --stream $KINESIS_TICK --shard $KINESIS_SHARD0 --batch_size 100
+python src/consume.py --type STD --stream $KINESIS_TICK --shard $KINESIS_SHARD1 --batch_size 100
+python src/consume.py --type STD --stream $KINESIS_TICK --shard $KINESIS_SHARD2 --batch_size 100
+python src/consume.py --type EFO --stream $KINESIS_TICK --shard $KINESIS_SHARD0 --consumer tick-consumer0
+python src/consume.py --type EFO --stream $KINESIS_TICK --shard $KINESIS_SHARD1 --consumer tick-consumer1
+python src/consume.py --type EFO --stream $KINESIS_TICK --shard $KINESIS_SHARD2 --consumer tick-consumer2
 ```
 
 ## Kinesis Analytics
