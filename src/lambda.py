@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from utils.response import success, failure
@@ -5,20 +6,36 @@ from utils.response import success, failure
 
 # function: initialization
 def initialization():
-    print("ENV1={}".format(env1))
-    print("ENV2={}".format(env2))
+    # print("ENV1={}".format(env1))
+    # print("ENV2={}".format(env2))
+    pass
 
 
 # function: lambda invoker handler
 def handler(event, context):
-    print("Received event: {}".format(json.dumps(event)))
+    # print("event={}".format(json.dumps(event)))
+    # print("request_id={}".format(context.aws_request_id))
 
-    status = 200
+    for record in event["Records"]:
+        payload = base64.b64decode(record["kinesis"]["data"])
+        partition_key = record["kinesis"]["partitionKey"]
+        output = {
+            "request_id": context.aws_request_id,
+            "partition_key": partition_key
+        }
+
+        try:
+            output["payload"] = json.loads(payload)
+            status = 200
+        except json.JSONDecodeError:
+            output["payload"] = payload.decode("utf-8")
+            status = 500
+        print(json.dumps(output))
+
     if status == 200:
         response = success("success")
     else:
         response = failure("failure")
-    print("response={}".format(response))
 
     return response
 
