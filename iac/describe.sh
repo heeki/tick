@@ -15,10 +15,17 @@ function usage {
 if [ -z "$PROFILE" ]; then usage; fi
 if [ -z "$STACK" ]; then usage; fi
 
-TICK_ID=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickPhysicalId") | .OutputValue')
-TICK_ARN=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickArn") | .OutputValue')
-# VWAP_ID=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK | jq -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutVwapPhysicalId") | .OutputValue' | tr -d '"') && echo "VWAP_ID=$VWAP_ID"
-# VWAP_ARN=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK | jq -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutVwapArn") | .OutputValue' | tr -d '"') && echo "VWAP_ARN=$VWAP_ARN"
-# ANALYTICS_ID=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK | jq -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutAnalytics") | .OutputValue' | tr -d '"') && echo "ANALYTICS_ID=$ANALYTICS_ID"
-
+if [ "$STACK" == "tick-kinesis" ]
+then
+OUTPUT=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK)
+TICK_ID=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickPhysicalId") | .OutputValue')
+TICK_ARN=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickArn") | .OutputValue')
 for var in {TICK_ID,TICK_ARN}; do echo "$var=${!var}"; done
+fi
+
+if [ "$STACK" == "tick-lambda" ]
+then
+OUTPUT=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK)
+LAMBDA_ARN=$(echo $OUTPUT | jq --raw-output -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutConsumerLambdaArn") | .OutputValue')
+for var in {LAMBDA_ARN}; do echo "$var=${!var}"; done
+fi

@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda EFO Consumer
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  ParamEnv1:
+    Type: String
+    Default: default1
+  ParamEnv2:
+    Type: String
+    Default: default2
+Resources:
+  ConsumerExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /service-role/
+      Policies:
+      - PolicyName: cloudwatch-logs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - logs:DescribeLogStreams
+            Resource: arn:aws:logs:*:*:*
+  ConsumerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda.handler
+      Role:
+        Fn::GetAtt:
+        - ConsumerExecRole
+        - Arn
+      Runtime: python3.8
+      CodeUri: s3://higs-serverless/2d8afaee91146f59a69d7d1c3e1c2401
+      Environment:
+        Variables:
+          ENV1:
+            Ref: ParamEnv1
+          ENV2:
+            Ref: ParamEnv2
+Outputs:
+  OutConsumerLambdaArn:
+    Value:
+      Fn::GetAtt:
+      - ConsumerLambda
+      - Arn

@@ -8,6 +8,7 @@
 data/*
 
 # temp files
+build/*
 tmp/*
 
 # files

@@ -11,7 +11,7 @@ do
 done
 
 function usage {
-    echo "deploy.sh -p [profile] -t [template_file] -s [stack_name] -v [create|update]" && exit 1
+    echo "deploy_cfn.sh -p [profile] -t [template_file] -s [stack_name] -v [create|update]" && exit 1
 }
 
 if [ -z "$PROFILE" ]; then usage; fi
