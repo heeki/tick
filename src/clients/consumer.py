@@ -35,9 +35,9 @@ class Consumer:
         - LATEST: start reading after the most recent record (latest record)
         """
 
-        # tracking values        
-        i = 1
-        j = 1
+        # tracking values
+        total_count = 1
+        batch_count = 1
         latencies = {}
 
         # initialize iterator
@@ -63,9 +63,9 @@ class Consumer:
                         "ingest_epoch": ingest_epoch,
                         "latency_ms": latency
                     }
-                    self.log.info("i={}, j={}, values={}".format(i, j, json.dumps(values)))
-                    i = 1 if i == self.batch_size else i + 1
-                    j += 1
+                    self.log.info("total_count={}, batch_count={}, values={}".format(batch_count, total_count, json.dumps(values)))
+                    total_count += 1
+                    batch_count = 1 if batch_count == self.batch_size else batch_count + 1
             except KeyboardInterrupt:
                 self.log.info("KeyboardInterrupt")
                 for symbol in latencies:

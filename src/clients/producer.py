@@ -52,19 +52,17 @@ class Producer:
                     record_size = len(json.dumps(record).encode('utf-8'))
                     batch_bytes += record_size
                     batch_records.append(record)
-                    self.log.info("i={}, record_size={}, trade={}".format(total_count, record_size, str(trade)))
+                    self.log.info("total_count={}, record_size={}, trade={}".format(total_count, record_size, str(trade)))
 
                     if batch_count % self.batch_size == 0:
                         response = self.client.put_batch(batch_records)
                         self.log.info(json.dumps(response))
-                        status["FailedRecordCount"] += response["FailedRecordCount"]
-                        status["SuccessfulRecordCount"] += response["SuccessfulRecordCount"]
+                        status = { k: status[k] + v for (k, v) in response.items() }
                         batch_records = []
                 # process the last set of data beyond batch_size
                 response = self.client.put_batch(batch_records)
                 self.log.info(json.dumps(response))
-                status["FailedRecordCount"] += response["FailedRecordCount"]
-                status["SuccessfulRecordCount"] += response["SuccessfulRecordCount"]
+                status = { k: status[k] + v for (k, v) in response.items() }
         except KeyboardInterrupt:
             self.log.error("keyboard interrupted")
         finally:
