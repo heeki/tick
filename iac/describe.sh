@@ -18,14 +18,18 @@ if [ -z "$STACK" ]; then usage; fi
 if [ "$STACK" == "tick-kinesis" ]
 then
 OUTPUT=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK)
-TICK_ID=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickPhysicalId") | .OutputValue')
-TICK_ARN=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickArn") | .OutputValue')
-for var in {TICK_ID,TICK_ARN}; do echo "$var=${!var}"; done
+KINESIS_ID=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickPhysicalId") | .OutputValue')
+KINESIS_ARN=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutTickArn") | .OutputValue')
+for var in {KINESIS_ID,KINESIS_ARN}; do echo "$var=${!var}"; done
 fi
 
 if [ "$STACK" == "tick-lambda" ]
 then
 OUTPUT=$(aws --profile $PROFILE cloudformation describe-stacks --stack-name $STACK)
-LAMBDA_ARN=$(echo $OUTPUT | jq --raw-output -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutConsumerLambdaArn") | .OutputValue')
-for var in {LAMBDA_ARN}; do echo "$var=${!var}"; done
+LAMBDA_ROLE_ARN=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutConsumerExecRoleArn") | .OutputValue')
+LAMBDA_ARN=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutConsumerLambdaArn") | .OutputValue')
+DLQ_ARN=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutConsumerDLQArn") | .OutputValue')
+EVENT_MAPPING_ID=$(echo $OUTPUT | jq -r -c '.["Stacks"][]["Outputs"][]  | select(.OutputKey == "OutConsumerEventSourceMapping") | .OutputValue')
+
+for var in {LAMBDA_ROLE_ARN,LAMBDA_ARN,DLQ_ARN,EVENT_MAPPING_ID}; do echo "$var=${!var}"; done
 fi

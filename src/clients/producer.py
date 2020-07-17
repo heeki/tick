@@ -26,7 +26,7 @@ class Producer:
         self.symbol = mapper[company_id].symbol
         self.log = Util.get_logger("producer:{}".format(self.stream))
     
-    def produce(self):
+    def produce(self, limit):
         status = {
             "FailedRecordCount": 0,
             "SuccessfulRecordCount": 0,
@@ -40,29 +40,31 @@ class Producer:
                 trade_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
                 # process in batches
                 for trade_record in trade_reader:
-                    total_count += 1
-                    batch_count += 1
-
-                    trade = Trade(self.symbol, trade_record)
-                    trade.update_datetime()
-                    record = {
-                        'Data': str(trade),
-                        'PartitionKey': trade.symbol
-                    }
-                    record_size = len(json.dumps(record).encode('utf-8'))
-                    batch_bytes += record_size
-                    batch_records.append(record)
-                    self.log.info("total_count={}, record_size={}, trade={}".format(total_count, record_size, str(trade)))
-
+                    if limit is not None and total_count < int(limit):
+                        trade = Trade(self.symbol, trade_record)
+                        trade.update_datetime()
+                        record = {
+                            'Data': str(trade),
+                            'PartitionKey': trade.symbol
+                        }
+                        record_size = len(json.dumps(record).encode('utf-8'))
+                        batch_bytes += record_size
+                        batch_records.append(record)
+                        total_count += 1
+                        batch_count += 1
+                        self.log.info("total_count={}, record_size={}, trade={}".format(total_count, record_size, str(trade)))
+                    else:
+                        break
                     if batch_count % self.batch_size == 0:
                         response = self.client.put_batch(batch_records)
                         self.log.info(json.dumps(response))
                         status = { k: status[k] + v for (k, v) in response.items() }
                         batch_records = []
                 # process the last set of data beyond batch_size
-                response = self.client.put_batch(batch_records)
-                self.log.info(json.dumps(response))
-                status = { k: status[k] + v for (k, v) in response.items() }
+                if len(batch_records) > 1:
+                    response = self.client.put_batch(batch_records)
+                    self.log.info(json.dumps(response))
+                    status = { k: status[k] + v for (k, v) in response.items() }
         except KeyboardInterrupt:
             self.log.error("keyboard interrupted")
         finally:

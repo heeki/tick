@@ -25,7 +25,7 @@ sam package \
 --s3-bucket $S3BUCKET
 
 echo "Deploying Lambda stack ($STACK)..."
-PARAMS="ParamEnv1=$ENV1 ParamEnv2=$ENV2"
+PARAMS="ParamEnv1=$ENV1 ParamEnv2=$ENV2 ParamKinesisArn=$KINESIS_ARN"
 sam deploy \
 --template-file iac/sam_output.yaml \
 --stack-name $STACK \
