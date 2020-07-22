@@ -92,7 +92,7 @@ Resources:
       EventSourceArn: !Ref ParamKinesisArn
       FunctionName: !Ref ConsumerLambda
       MaximumBatchingWindowInSeconds: 60
-      ParallelizationFactor: 1
+      ParallelizationFactor: 2
       StartingPosition: LATEST
 
 Outputs:

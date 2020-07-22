@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import uuid
 from utils.response import success, failure
 
 
@@ -21,6 +22,7 @@ def handler(event, context):
         partition_key = record["kinesis"]["partitionKey"]
         output = {
             "request_id": context.aws_request_id,
+            "sandbox_id": str(sandbox_id),
             "partition_key": partition_key
         }
 
@@ -43,4 +45,5 @@ def handler(event, context):
 # initialization, mapping
 env1 = os.environ['ENV1']
 env2 = os.environ['ENV2']
+sandbox_id = uuid.uuid1()
 initialization()

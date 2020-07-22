@@ -10,6 +10,7 @@ data/*
 # temp files
 build/*
 tmp/*
+iac/sam_output.yaml
 
 # files
 _notes.md
@@ -17,3 +18,4 @@ _notes.md
 *.csv
 *.pdf
 *.pyc
+*.xlsx

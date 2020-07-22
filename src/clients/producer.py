@@ -40,7 +40,7 @@ class Producer:
                 trade_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
                 # process in batches
                 for trade_record in trade_reader:
-                    if limit is not None and total_count < int(limit):
+                    if limit is None or (limit is not None and total_count < int(limit)):
                         trade = Trade(self.symbol, trade_record)
                         trade.update_datetime()
                         record = {
@@ -61,7 +61,7 @@ class Producer:
                         status = { k: status[k] + v for (k, v) in response.items() }
                         batch_records = []
                 # process the last set of data beyond batch_size
-                if len(batch_records) > 1:
+                if len(batch_records) > 0:
                     response = self.client.put_batch(batch_records)
                     self.log.info(json.dumps(response))
                     status = { k: status[k] + v for (k, v) in response.items() }
