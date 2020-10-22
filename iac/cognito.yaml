@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Tick Cognito authentication for Kinesis Data Generator
+Parameters:
+  domainName:
+    Type: String
+  cognitoUserName:
+    Type: String
+  cognitoUserEmail:
+    Type: String
+  kinesisArn:
+    Type: String
+  consumerArn:
+    Type: String
+Resources:
+  # Cognito
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 3
+  CognitoDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref domainName
+      UserPoolId: !Ref CognitoUserPool
+  CognitoClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: false
+      UserPoolId: !Ref CognitoUserPool
+  CognitoUser:
+    Type: AWS::Cognito::UserPoolUser
+    Properties:
+      Username: !Ref cognitoUserName
+      UserPoolId: !Ref CognitoUserPool
+      UserAttributes:
+        - Name: email
+          Value: !Ref cognitoUserEmail
+        - Name: email_verified
+          Value: true
+      ForceAliasCreation: true
+  CognitoGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      Precedence: 0
+      UserPoolId: !Ref CognitoUserPool
+  CognitoIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      AllowUnauthenticatedIdentities: false
+      # CognitoIdentityProviders:
+      #   - ProviderName: !GetAtt CognitoUserPool.ProviderName
+      #     ClientId: !Ref CognitoClient
+  CognitoRoleAuth:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              "StringEquals":
+                cognito-identity.amazonaws.com:aud: !Ref CognitoIdentityPool
+              "ForAnyValue:StringLike":
+                cognito-identity.amazonaws.com:amr: authenticated
+      Path: /
+      Policies:
+        - PolicyName: kinesis
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeRegions
+                  - firehose:ListDeliveryStreams
+                  - kinesis:ListShards
+                  - kinesis:ListStreams
+                Resource: '*'
+        - PolicyName: kinesis-streams
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:DescribeStream
+                  - kinesis:DescribeStreamSummary
+                  - kinesis:GetRecords
+                  - kinesis:GetShardIterator
+                  - kinesis:SubscribeToShard
+                  - kinesis:PutRecord
+                  - kinesis:PutRecords
+                Resource: !Ref kinesisArn
+        - PolicyName: kinesis-firehose
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:DescribeDeliveryStream
+                  - kinesis:PutRecord
+                  - kinesis:PutRecordBatch
+                Resource: 'arn:aws:firehose:*:*:deliverystream/*'
+        - PolicyName: kinesis-consumer
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:SubscribeToShard
+                Resource: !Ref consumerArn
+  CognitoRoleUnauth:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              "StringEquals":
+                cognito-identity.amazonaws.com:aud: !Ref CognitoIdentityPool
+              "ForAnyValue:StringLike":
+                cognito-identity.amazonaws.com:amr: unauthenticated
+      Path: /
+      Policies:
+        - PolicyName: es-readonly
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - es:Describe*
+                  - es:List*
+                Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${domainName}/*'
+  CognitoIdentityRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles:
+        "authenticated": !GetAtt CognitoRoleAuth.Arn
+        "unauthenticated": !GetAtt CognitoRoleUnauth.Arn
+Outputs:
+  OutCognitoUserPool:
+    Value: !Ref CognitoUserPool
+  OutCognitoClientId:
+    Value: !Ref CognitoClient
+  OutCognitoIdentityPool:
+    Value: !Ref CognitoIdentityPool
+  OutCognitoProviderName:
+    Value: !GetAtt CognitoUserPool.ProviderName
+  OutCognitoProviderUrl:
+    Value: !GetAtt CognitoUserPool.ProviderURL

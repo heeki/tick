@@ -1,13 +1,19 @@
 include etc/execute_env.sh
 
 kinesis:
-	aws --profile ${PROFILE} cloudformation create-stack --stack-name ${KINESIS_STACK} --template-body file://${KINESIS_TEMPLATE} --parameters ${KINESIS_PARAMS} --capabilities CAPABILITY_IAM | jq
+	aws --profile ${PROFILE} cloudformation create-stack --stack-name ${KINESIS_STACK} --template-body file://${KINESIS_TEMPLATE} --parameters file://${KINESIS_PARAMS} --capabilities CAPABILITY_IAM | jq
 
 kinesis.update:
-	aws --profile ${PROFILE} cloudformation update-stack --stack-name ${KINESIS_STACK} --template-body file://${KINESIS_TEMPLATE} --parameters ${KINESIS_PARAMS} --capabilities CAPABILITY_IAM | jq
+	aws --profile ${PROFILE} cloudformation update-stack --stack-name ${KINESIS_STACK} --template-body file://${KINESIS_TEMPLATE} --parameters file://${KINESIS_PARAMS} --capabilities CAPABILITY_IAM | jq
 
 kinesis.describe.efo:
 	aws kinesis describe-stream-consumer --stream-arn ${KINESIS_ARN} --consumer-name tick-consumer | jq
+
+cognito:
+	aws --profile ${PROFILE} cloudformation create-stack --stack-name ${COGNITO_STACK} --template-body file://${COGNITO_TEMPLATE} --parameters file://${COGNITO_PARAMS} --capabilities CAPABILITY_IAM | jq
+
+cognito.update:
+	aws --profile ${PROFILE} cloudformation update-stack --stack-name ${COGNITO_STACK} --template-body file://${COGNITO_TEMPLATE} --parameters file://${COGNITO_PARAMS} --capabilities CAPABILITY_IAM | jq
 
 consumer: consumer.package consumer.deploy
 
@@ -37,19 +43,19 @@ lambda.invoke:
 	cat tmp/response.json | jq -r ".LogResult" | base64 --decode
 
 producer.produce1:
-	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA1} --stream ${KINESIS_INGEST} --batch_size 100 --limit 1000
+	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA1} --stream ${KINESIS_INGEST} --batch_size 100 --limit 10000
 
 producer.produce2:
-	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA2} --stream ${KINESIS_INGEST} --batch_size 100 --limit 1000
+	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA2} --stream ${KINESIS_INGEST} --batch_size 100 --limit 10000
 
 producer.produce3:
-	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA3} --stream ${KINESIS_INGEST} --batch_size 100 --limit 1000
+	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA3} --stream ${KINESIS_INGEST} --batch_size 100 --limit 10000
 
 producer.produce4:
-	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA4} --stream ${KINESIS_INGEST} --batch_size 100 --limit 1000
+	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA4} --stream ${KINESIS_INGEST} --batch_size 100 --limit 10000
 
 producer.produce5:
-	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA5} --stream ${KINESIS_INGEST} --batch_size 100 --limit 1000
+	python src/produce.py --rfile ${ANALYTICS_RDATA} --dfile ${ANALYTICS_DATA5} --stream ${KINESIS_INGEST} --batch_size 100 --limit 10000
 
 test:
 	$(eval P_SWAGGER_KEY=$(shell shasum -a 256 iac/swagger.yaml | awk '{print $$1}'))
