@@ -2,20 +2,31 @@ import base64
 import json
 import os
 import uuid
-from utils.response import success, failure
 
 
-# function: initialization
-def initialization():
-    # print("ENV1={}".format(env1))
-    # print("ENV2={}".format(env2))
-    pass
+# helper functions
+def build_response(code, body, include_headers=False):
+    # headers for cors
+    if include_headers:
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Credentials": True
+        }
+    else:
+        headers = {}
+
+    # lambda proxy integration
+    response = {
+        'isBase64Encoded': False,
+        'statusCode': code,
+        'headers': headers,
+        'body': body
+    }
+    return response
 
 
 # function: lambda invoker handler
 def handler(event, context):
-    # print("event={}".format(json.dumps(event)))
-    # print("request_id={}".format(context.aws_request_id))
 
     for record in event["Records"]:
         payload = base64.b64decode(record["kinesis"]["data"])
@@ -34,16 +45,11 @@ def handler(event, context):
             status = 500
         print(json.dumps(output))
 
-    if status == 200:
-        response = success("success")
-    else:
-        response = failure("failure")
+    payload = "success" if status == 200 else "failure"
+    response = build_response(status, payload)
 
     return response
 
 
 # initialization, mapping
-env1 = os.environ['ENV1']
-env2 = os.environ['ENV2']
 sandbox_id = uuid.uuid1()
-initialization()
