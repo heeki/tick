@@ -1,12 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: KDS for ingestion of tick data
-
+Description: Tick streams
 Parameters:
   ParamName:
     Type: String
-
 Resources:
-  TickIngestStream:
+  IngestStream:
     Type: AWS::Kinesis::Stream
     Properties:
       Name: !Sub '${ParamName}-ingest'
@@ -25,14 +23,13 @@ Resources:
   #     ApplicationDescription: 'Application for calculating VWAP'
   #     Inputs:
   #       - KinesisStreamsInput:
-  #           ResourceARN !GetAtt TickStream.Arn
+  #           ResourceARN !GetAtt IngestStream.Arn
   #           RoleARN:
-
 Outputs:
-  OutTickPhysicalId:
-    Value: !Ref TickIngestStream
-  OutTickArn:
-    Value: !GetAtt TickIngestStream.Arn
+  OutIngestPhysicalId:
+    Value: !Ref IngestStream
+  OutIngestArn:
+    Value: !GetAtt IngestStream.Arn
   # OutVwapPhysicalId:
   #   Value: !Ref VwapStream
   # OutVwapArn:

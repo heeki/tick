@@ -1,17 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Lambda EFO Consumer
+Description: Tick Lambda consumer
 Transform: AWS::Serverless-2016-10-31
 Parameters:
-  ParamEnv1:
-    Type: String
-    Default: default1
-  ParamEnv2:
-    Type: String
-    Default: default2
-  ParamKinesisArn:
+  kinesisArn:
     Type: String
 Resources:
-  ConsumerExecRole:
+  FnExecRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -35,7 +29,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - logs:DescribeLogStreams
-                Resource: 'arn:aws:logs:*:*:*'
+                Resource: 'arn:aws:logs:*:*:log-group:*:*'
         - PolicyName: sqs
           PolicyDocument:
             Version: '2012-10-17'
@@ -43,7 +37,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - sqs:SendMessage
-                Resource: !GetAtt ConsumerDLQ.Arn
+                Resource: !GetAtt DLQ.Arn
         - PolicyName: kinesis
           PolicyDocument:
             Version: '2012-10-17'
@@ -64,43 +58,43 @@ Resources:
                   - kinesis:GetRecords
                   - kinesis:GetShardIterator
                   - kinesis:SubscribeToShard
-                Resource: !Ref ParamKinesisArn
-  ConsumerLambda:
+                Resource: !Ref kinesisArn
+  Fn:
     Type: AWS::Serverless::Function
     Properties:
       Handler: lambda.handler
-      Role: !GetAtt ConsumerExecRole.Arn
+      Role: !GetAtt FnExecRole.Arn
       Runtime: python3.8
       CodeUri: ../src
-      Environment:
-        Variables:
-          ENV1: !Ref ParamEnv1
-          ENV2: !Ref ParamEnv2
-  ConsumerDLQ:
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:2'
+  FnLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${Fn}"
+      RetentionInDays: 7
+  DLQ:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 600
-  ConsumerEventSourceMapping:
+  EventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       BatchSize: 100
       BisectBatchOnFunctionError: true
       DestinationConfig:
         OnFailure:
-          Destination: !GetAtt ConsumerDLQ.Arn
+          Destination: !GetAtt DLQ.Arn
       Enabled: true
-      EventSourceArn: !Ref ParamKinesisArn
-      FunctionName: !Ref ConsumerLambda
+      EventSourceArn: !Ref kinesisArn
+      FunctionName: !Ref Fn
       MaximumBatchingWindowInSeconds: 60
       ParallelizationFactor: 2
       StartingPosition: LATEST
-
 Outputs:
-  OutConsumerExecRoleArn:
-    Value: !GetAtt ConsumerExecRole.Arn
-  OutConsumerLambdaArn:
-    Value: !GetAtt ConsumerLambda.Arn
-  OutConsumerDLQArn:
-    Value: !GetAtt ConsumerDLQ.Arn
-  OutConsumerEventSourceMapping:
-    Value: !Ref ConsumerEventSourceMapping
+  outFnArn:
+    Value: !GetAtt Fn.Arn
+  outDLQArn:
+    Value: !GetAtt DLQ.Arn
+  outEventSourceMapping:
+    Value: !Ref EventSourceMapping

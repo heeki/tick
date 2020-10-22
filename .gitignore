@@ -4,16 +4,21 @@
 .idea/*
 .env
 
+# config files
+etc/*.json
+etc/*.sh
+
 # data files
 data/*
 
 # temp files
 build/*
 tmp/*
-iac/sam_output.yaml
+iac/*_output.yaml
+src/*/__pycache__
 
 # files
-_notes.md
+notes.md
 *.asc
 *.csv
 *.pdf

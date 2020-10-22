@@ -1,6 +1,0 @@
-{
-    "ConsumerLambda": {
-        "ENV1": "override1",
-        "ENV2": "override2"
-    }
-}
