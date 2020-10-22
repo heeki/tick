@@ -4,6 +4,8 @@ Transform: AWS::Serverless-2016-10-31
 Parameters:
   kinesisArn:
     Type: String
+  consumerArn:
+    Type: String
 Resources:
   FnExecRole:
     Type: AWS::IAM::Role
@@ -59,6 +61,14 @@ Resources:
                   - kinesis:GetShardIterator
                   - kinesis:SubscribeToShard
                 Resource: !Ref kinesisArn
+        - PolicyName: kinesis-consumer
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:SubscribeToShard
+                Resource: !Ref consumerArn
   Fn:
     Type: AWS::Serverless::Function
     Properties:
@@ -77,7 +87,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 600
-  EventSourceMapping:
+  FnMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       BatchSize: 100
@@ -86,15 +96,18 @@ Resources:
         OnFailure:
           Destination: !GetAtt DLQ.Arn
       Enabled: true
-      EventSourceArn: !Ref kinesisArn
+      # EventSourceArn: !Ref kinesisArn
+      EventSourceArn: !Ref consumerArn
       FunctionName: !Ref Fn
       MaximumBatchingWindowInSeconds: 60
       ParallelizationFactor: 2
       StartingPosition: LATEST
 Outputs:
+  outFn:
+    Value: !Ref Fn
   outFnArn:
     Value: !GetAtt Fn.Arn
   outDLQArn:
     Value: !GetAtt DLQ.Arn
-  outEventSourceMapping:
-    Value: !Ref EventSourceMapping
+  outFnMapping:
+    Value: !Ref FnMapping
