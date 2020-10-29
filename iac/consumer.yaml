@@ -6,6 +6,8 @@ Parameters:
     Type: String
   consumerArn:
     Type: String
+  parallelConsumers:
+    Type: Number
 Resources:
   FnExecRole:
     Type: AWS::IAM::Role
@@ -96,11 +98,11 @@ Resources:
         OnFailure:
           Destination: !GetAtt DLQ.Arn
       Enabled: true
-      # EventSourceArn: !Ref kinesisArn
-      EventSourceArn: !Ref consumerArn
+      EventSourceArn: !Ref kinesisArn
+      # EventSourceArn: !Ref consumerArn
       FunctionName: !Ref Fn
       MaximumBatchingWindowInSeconds: 60
-      ParallelizationFactor: 2
+      ParallelizationFactor: !Ref parallelConsumers
       StartingPosition: LATEST
 Outputs:
   outFn:

@@ -34,10 +34,13 @@ Resources:
     Properties:
       ExplicitAuthFlows:
         - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_CUSTOM_AUTH
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
       GenerateSecret: false
+      SupportedIdentityProviders:
+        - COGNITO
       UserPoolId: !Ref CognitoUserPool
   CognitoUser:
     Type: AWS::Cognito::UserPoolUser
@@ -59,9 +62,9 @@ Resources:
     Type: AWS::Cognito::IdentityPool
     Properties:
       AllowUnauthenticatedIdentities: false
-      # CognitoIdentityProviders:
-      #   - ProviderName: !GetAtt CognitoUserPool.ProviderName
-      #     ClientId: !Ref CognitoClient
+      CognitoIdentityProviders:
+        - ProviderName: !GetAtt CognitoUserPool.ProviderName
+          ClientId: !Ref CognitoClient
   CognitoRoleAuth:
     Type: AWS::IAM::Role
     Properties:
@@ -78,7 +81,7 @@ Resources:
                 cognito-identity.amazonaws.com:amr: authenticated
       Path: /
       Policies:
-        - PolicyName: kinesis
+        - PolicyName: describe-list
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -86,7 +89,6 @@ Resources:
                 Action:
                   - ec2:DescribeRegions
                   - firehose:ListDeliveryStreams
-                  - kinesis:ListShards
                   - kinesis:ListStreams
                 Resource: '*'
         - PolicyName: kinesis-streams
@@ -96,31 +98,20 @@ Resources:
               - Effect: Allow
                 Action:
                   - kinesis:DescribeStream
-                  - kinesis:DescribeStreamSummary
-                  - kinesis:GetRecords
-                  - kinesis:GetShardIterator
-                  - kinesis:SubscribeToShard
                   - kinesis:PutRecord
                   - kinesis:PutRecords
-                Resource: !Ref kinesisArn
+                # Resource: !Ref kinesisArn
+                Resource: 'arn:aws:kinesis:*:*:stream/*'
         - PolicyName: kinesis-firehose
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - kinesis:DescribeDeliveryStream
-                  - kinesis:PutRecord
-                  - kinesis:PutRecordBatch
+                  - firehose:DescribeDeliveryStream
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
                 Resource: 'arn:aws:firehose:*:*:deliverystream/*'
-        - PolicyName: kinesis-consumer
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - kinesis:SubscribeToShard
-                Resource: !Ref consumerArn
   CognitoRoleUnauth:
     Type: AWS::IAM::Role
     Properties:
@@ -137,14 +128,12 @@ Resources:
                 cognito-identity.amazonaws.com:amr: unauthenticated
       Path: /
       Policies:
-        - PolicyName: es-readonly
+        - PolicyName: deny-all
           PolicyDocument:
             Statement:
-              - Effect: Allow
-                Action:
-                  - es:Describe*
-                  - es:List*
-                Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${domainName}/*'
+              - Effect: Deny
+                Action: '*'
+                Resource: '*'
   CognitoIdentityRoleAttachment:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
     Properties:

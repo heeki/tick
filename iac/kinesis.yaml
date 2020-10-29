@@ -3,13 +3,15 @@ Description: Tick streams
 Parameters:
   name:
     Type: String
+  shardCount:
+    Type: Number
 Resources:
   Ingest:
     Type: AWS::Kinesis::Stream
     Properties:
       Name: !Sub '${name}-ingest'
       RetentionPeriodHours: 24
-      ShardCount: 1
+      ShardCount: !Ref shardCount
   # Vwap:
   #   Type: AWS::Kinesis::Stream
   #   Properties:
