@@ -27,10 +27,15 @@ Resources:
   #       - KinesisStreamsInput:
   #           ResourceARN !GetAtt Ingest.Arn
   #           RoleARN:
-  Consumer:
+  Consumer1:
     Type: AWS::Kinesis::StreamConsumer
     Properties:
-      ConsumerName: !Sub '${name}-consumer'
+      ConsumerName: !Sub '${name}-consumer-1'
+      StreamARN: !GetAtt Ingest.Arn
+  Consumer2:
+    Type: AWS::Kinesis::StreamConsumer
+    Properties:
+      ConsumerName: !Sub '${name}-consumer-2'
       StreamARN: !GetAtt Ingest.Arn
 Outputs:
   outIngestPhysicalId:
@@ -43,5 +48,7 @@ Outputs:
   #   Value: !GetAtt Vwap.Arn
   # outAnalytics:
   #   Value: !Ref Analytics
-  outConsumer:
-    Value: !Ref Consumer
+  outConsumer1:
+    Value: !Ref Consumer1
+  outConsumer2:
+    Value: !Ref Consumer2
