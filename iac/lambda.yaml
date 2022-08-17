@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Tick Lambda consumer
+Transform: AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Layers:
+      - !Sub 'arn:aws:lambda:${AWS::Region}:546275881527:layer:xray-python3:1'
+      - !Sub 'arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:21'
+    MemorySize: !Ref pFnMemory
+    Runtime: python3.9
+    Timeout: !Ref pFnTimeout
+    Tracing: Active
+Parameters:
+  pFnMemory:
+    Type: Number
+  pFnTimeout:
+    Type: Number
+  pKinesisArn:
+    Type: String
+  pConsumer1Arn:
+    Type: String
+  pConsumer2Arn:
+    Type: String
+  pBatchSize:
+    Type: Number
+  pParallelConsumers:
+    Type: Number
+  pEnableKinesis:
+    Type: String
+  pEnableConsumer:
+    Type: String
+Resources:
+  # IAM
+  FnRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: '/service-role/'
+      Policies:
+        - PolicyName: cloudwatch-insights
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                Resource: '*'
+        - PolicyName: cloudwatch-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: 'arn:aws:logs:*:*:log-group:*:*'
+        - PolicyName: sqs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !GetAtt DLQ.Arn
+        - PolicyName: kinesis-list
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:ListShards
+                  - kinesis:ListStreams
+                Resource: '*'
+        - PolicyName: kinesis-streams
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:DescribeStream
+                  - kinesis:DescribeStreamSummary
+                  - kinesis:GetRecords
+                  - kinesis:GetShardIterator
+                  - kinesis:SubscribeToShard
+                Resource: !Ref pKinesisArn
+        # - PolicyName: kinesis-consumer
+        #   PolicyDocument:
+        #     Version: '2012-10-17'
+        #     Statement:
+        #       - Effect: Allow
+        #         Action:
+        #           - kinesis:SubscribeToShard
+        #         Resource:
+        #           - !Ref pConsumer1Arn
+        #           - !Ref pConsumer2Arn
+
+  # Lambda
+  Fn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda.handler
+      Role: !GetAtt FnRole.Arn
+      CodeUri: ../src
+  FnLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${Fn}"
+      RetentionInDays: 7
+
+  # SQS failure destination
+  DLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 600
+
+  # Kinesis direct with tumbling window
+  FnMapping0:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1000
+      BisectBatchOnFunctionError: true
+      DestinationConfig:
+        OnFailure:
+          Destination: !GetAtt DLQ.Arn
+      Enabled: !Ref pEnableKinesis
+      EventSourceArn: !Ref pKinesisArn
+      FunctionName: !Ref Fn
+      ParallelizationFactor: !Ref pParallelConsumers
+      StartingPosition: LATEST
+      TumblingWindowInSeconds: 10
+  # Kinesis direct with PF
+  # FnMapping1:
+  #   Type: AWS::Lambda::EventSourceMapping
+  #   Properties:
+  #     BatchSize: 10
+  #     BisectBatchOnFunctionError: true
+  #     DestinationConfig:
+  #       OnFailure:
+  #         Destination: !GetAtt DLQ.Arn
+  #     Enabled: !Ref pEnableKinesis
+  #     EventSourceArn: !Ref pKinesisArn
+  #     FunctionName: !Ref Fn
+  #     MaximumBatchingWindowInSeconds: 1
+  #     ParallelizationFactor: !Ref pParallelConsumers
+  #     StartingPosition: LATEST
+  # Kinesis EFO with PF
+  # FnMapping2:
+  #   Type: AWS::Lambda::EventSourceMapping
+  #   Properties:
+  #     BatchSize: 10
+  #     BisectBatchOnFunctionError: true
+  #     DestinationConfig:
+  #       OnFailure:
+  #         Destination: !GetAtt DLQ.Arn
+  #     Enabled: !Ref pEnableConsumer
+  #     EventSourceArn: !Ref pConsumer1Arn
+  #     FunctionName: !Ref Fn
+  #     MaximumBatchingWindowInSeconds: 1
+  #     ParallelizationFactor: !Ref pParallelConsumers
+  #     StartingPosition: LATEST
+  # Kinesis EFO with PF  
+  # FnMapping3:
+  #   Type: AWS::Lambda::EventSourceMapping
+  #   Properties:
+  #     BatchSize: 10
+  #     BisectBatchOnFunctionError: true
+  #     DestinationConfig:
+  #       OnFailure:
+  #         Destination: !GetAtt DLQ.Arn
+  #     Enabled: !Ref pEnableConsumer
+  #     EventSourceArn: !Ref pConsumer2Arn
+  #     FunctionName: !Ref Fn
+  #     MaximumBatchingWindowInSeconds: 1
+  #     ParallelizationFactor: !Ref pParallelConsumers
+  #     StartingPosition: LATEST
+Outputs:
+  outFn:
+    Value: !Ref Fn

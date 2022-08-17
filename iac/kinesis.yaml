@@ -1,54 +1,54 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Tick streams
+Description: Tick Kinesis data streams
 Parameters:
-  name:
+  pName:
     Type: String
-  shardCount:
+  pShardCount:
     Type: Number
 Resources:
   Ingest:
     Type: AWS::Kinesis::Stream
     Properties:
-      Name: !Sub '${name}-ingest'
+      Name: !Sub '${pName}-ingest'
       RetentionPeriodHours: 24
-      ShardCount: !Ref shardCount
+      ShardCount: !Ref pShardCount
   # Vwap:
   #   Type: AWS::Kinesis::Stream
   #   Properties:
-  #     Name: !Sub '${name}-vwap'
+  #     Name: !Sub '${pName}-vwap'
   #     RetentionPeriodHours: 24
   #     ShardCount: 1
   # Analytics:
   #   Type: AWS::KinesisAnalytics::Application
   #   Properties:
-  #     ApplicationName: !Sub '${name}-analytics'
+  #     ApplicationName: !Sub '${pName}-analytics'
   #     ApplicationDescription: 'Application for calculating VWAP'
   #     Inputs:
   #       - KinesisStreamsInput:
   #           ResourceARN !GetAtt Ingest.Arn
   #           RoleARN:
-  Consumer1:
-    Type: AWS::Kinesis::StreamConsumer
-    Properties:
-      ConsumerName: !Sub '${name}-consumer-1'
-      StreamARN: !GetAtt Ingest.Arn
-  Consumer2:
-    Type: AWS::Kinesis::StreamConsumer
-    Properties:
-      ConsumerName: !Sub '${name}-consumer-2'
-      StreamARN: !GetAtt Ingest.Arn
+  # Consumer1:
+  #   Type: AWS::Kinesis::StreamConsumer
+  #   Properties:
+  #     ConsumerName: !Sub '${pName}-consumer-1'
+  #     StreamARN: !GetAtt Ingest.Arn
+  # Consumer2:
+  #   Type: AWS::Kinesis::StreamConsumer
+  #   Properties:
+  #     ConsumerName: !Sub '${pName}-consumer-2'
+  #     StreamARN: !GetAtt Ingest.Arn
 Outputs:
-  outIngestPhysicalId:
+  outIngest:
     Value: !Ref Ingest
   outIngestArn:
     Value: !GetAtt Ingest.Arn
-  # outVwapPhysicalId:
+  # outVwap:
   #   Value: !Ref Vwap
   # outVwapArn:
   #   Value: !GetAtt Vwap.Arn
   # outAnalytics:
   #   Value: !Ref Analytics
-  outConsumer1:
-    Value: !Ref Consumer1
-  outConsumer2:
-    Value: !Ref Consumer2
+  # outConsumer1:
+  #   Value: !Ref Consumer1
+  # outConsumer2:
+  #   Value: !Ref Consumer2
